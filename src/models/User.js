@@ -122,6 +122,21 @@ const userSchema = new mongoose.Schema(
             default: false,
         },
 
+        // Verification Status
+        isVerified: {
+            type: Boolean,
+            default: false,
+        },
+        verifiedAt: {
+            type: Date,
+        },
+
+        // Profile Completion
+        profileCompleted: {
+            type: Boolean,
+            default: false,
+        },
+
         // Legacy fields for backward compatibility
         name: {
             type: String,

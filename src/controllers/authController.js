@@ -1,5 +1,9 @@
 const User = require('../models/User');
 const generateToken = require('../utils/generateToken');
+const { sendOTPEmail } = require('../services/emailService');
+const { sendOTPWhatsApp } = require('../services/whatsappService');
+const OTP = require('../models/OTP');
+const crypto = require('crypto');
 
 // @desc    Login user
 // @route   POST /api/auth/login
@@ -36,6 +40,36 @@ const login = async (req, res) => {
             });
         }
 
+        // Check if user is verified
+        if (!user.isVerified) {
+            // Delete old OTPs
+            await OTP.deleteMany({ userId: user._id, verified: false });
+
+            // Generate and send new OTP
+            const otpCode = crypto.randomInt(100000, 999999).toString();
+            const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+            await OTP.create({
+                userId: user._id,
+                email: user.email,
+                mobile: user.mobile,
+                otp: otpCode,
+                purpose: 'login',
+                expiresAt,
+            });
+
+            // Send OTP
+            await sendOTPEmail(user.email, otpCode, user.name);
+            await sendOTPWhatsApp(user.mobile, otpCode, user.name);
+
+            return res.status(403).json({
+                success: false,
+                requiresVerification: true,
+                userId: user._id,
+                message: 'Please verify your account. OTP sent to your email and WhatsApp.',
+            });
+        }
+
         // Create token
         const token = generateToken(user._id);
 
@@ -47,8 +81,9 @@ const login = async (req, res) => {
                 name: user.name,
                 email: user.email,
                 role: user.role,
-                phone: user.phone,
-                avatar: user.avatar,
+                mobile: user.mobile,
+                isVerified: user.isVerified,
+                profileCompleted: user.profileCompleted,
             },
         });
     } catch (error) {
