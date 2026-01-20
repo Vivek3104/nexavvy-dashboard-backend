@@ -136,6 +136,29 @@ const userSchema = new mongoose.Schema(
             type: Boolean,
             default: false,
         },
+        isActive: {
+            type: Boolean,
+            default: true,
+        },
+        kycStatus: {
+            type: String,
+            enum: ['pending', 'submitted', 'verified', 'rejected'],
+            default: 'pending',
+        },
+        kycVerifiedAt: {
+            type: Date,
+        },
+        kycVerifiedBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+        },
+        deactivatedAt: {
+            type: Date,
+        },
+        deactivatedBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+        },
 
         // Legacy fields for backward compatibility
         name: {

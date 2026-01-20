@@ -10,18 +10,18 @@ const crypto = require('crypto');
 // @access  Public
 const login = async (req, res) => {
     try {
-        const { email, password } = req.body;
+        const { mobile, password } = req.body;
 
-        // Validate email & password
-        if (!email || !password) {
+        // Validate mobile & password
+        if (!mobile || !password) {
             return res.status(400).json({
                 success: false,
-                message: 'Please provide email and password',
+                message: 'Please provide mobile number and password',
             });
         }
 
-        // Check for user (include password for comparison)
-        const user = await User.findOne({ email }).select('+password');
+        // Check for user by mobile (include password for comparison)
+        const user = await User.findOne({ mobile }).select('+password');
 
         if (!user) {
             return res.status(401).json({
@@ -40,51 +40,34 @@ const login = async (req, res) => {
             });
         }
 
-        // Check if user is verified
-        if (!user.isVerified) {
-            // Delete old OTPs
-            await OTP.deleteMany({ userId: user._id, verified: false });
+        // Password is correct - now send OTP for verification
+        // Delete old OTPs
+        await OTP.deleteMany({ userId: user._id, verified: false });
 
-            // Generate and send new OTP
-            const otpCode = crypto.randomInt(100000, 999999).toString();
-            const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+        // Generate and send new OTP
+        const otpCode = crypto.randomInt(100000, 999999).toString();
+        const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
-            await OTP.create({
-                userId: user._id,
-                email: user.email,
-                mobile: user.mobile,
-                otp: otpCode,
-                purpose: 'login',
-                expiresAt,
-            });
+        await OTP.create({
+            userId: user._id,
+            email: user.email,
+            mobile: user.mobile,
+            otp: otpCode,
+            purpose: 'login',
+            expiresAt,
+        });
 
-            // Send OTP
-            await sendOTPEmail(user.email, otpCode, user.name);
-            await sendOTPWhatsApp(user.mobile, otpCode, user.name);
+        // Send OTP
+        await sendOTPEmail(user.email, otpCode, user.name);
+        await sendOTPWhatsApp(user.mobile, otpCode, user.name);
 
-            return res.status(403).json({
-                success: false,
-                requiresVerification: true,
-                userId: user._id,
-                message: 'Please verify your account. OTP sent to your email and WhatsApp.',
-            });
-        }
-
-        // Create token
-        const token = generateToken(user._id);
-
-        res.status(200).json({
+        return res.status(200).json({
             success: true,
-            token,
-            user: {
-                id: user._id,
-                name: user.name,
-                email: user.email,
-                role: user.role,
-                mobile: user.mobile,
-                isVerified: user.isVerified,
-                profileCompleted: user.profileCompleted,
-            },
+            requiresOTP: true,
+            userId: user._id,
+            mobile: user.mobile,
+            email: user.email,
+            message: 'Password verified. OTP sent to your mobile and email.',
         });
     } catch (error) {
         res.status(500).json({
@@ -94,12 +77,20 @@ const login = async (req, res) => {
     }
 };
 
-// @desc    Register new partner
+// @desc    Register new user (simplified with OTP)
 // @route   POST /api/auth/register
 // @access  Public
 const register = async (req, res) => {
     try {
-        const { name, email, password, phone } = req.body;
+        const { name, email, mobile, password, role = 'partner' } = req.body;
+
+        // Validate required fields
+        if (!name || !email || !mobile || !password) {
+            return res.status(400).json({
+                success: false,
+                message: 'Please provide name, email, mobile (WhatsApp), and password',
+            });
+        }
 
         // Check if user exists
         const userExists = await User.findOne({ email });
@@ -111,27 +102,58 @@ const register = async (req, res) => {
             });
         }
 
-        // Create user
+        // Create user (not verified yet)
         const user = await User.create({
             name,
+            firstName: name.split(' ')[0],
+            lastName: name.split(' ').slice(1).join(' ') || '',
             email,
+            mobile,
+            phone: mobile, // For backward compatibility
             password,
-            phone,
-            role: 'partner', // Default role is partner
+            role,
+            isVerified: false,
+            profileCompleted: false,
         });
 
-        // Create token
-        const token = generateToken(user._id);
+        console.log('User created:', { id: user._id, email: user.email, mobile: user.mobile });
+
+        // Generate OTP
+        const otpCode = crypto.randomInt(100000, 999999).toString();
+        const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+        // Validate mobile before creating OTP
+        if (!mobile) {
+            console.error('Mobile is missing!', { name, email, mobile });
+            return res.status(400).json({
+                success: false,
+                message: 'Mobile number is required',
+            });
+        }
+
+        console.log('Creating OTP with:', { userId: user._id, email, mobile, otpCode });
+
+        // Save OTP
+        await OTP.create({
+            userId: user._id,
+            email,
+            mobile,
+            otp: otpCode,
+            purpose: 'registration',
+            expiresAt,
+        });
+
+        // Send OTP via Email and WhatsApp
+        await sendOTPEmail(email, otpCode, name);
+        await sendOTPWhatsApp(mobile, otpCode, name);
 
         res.status(201).json({
             success: true,
-            token,
-            user: {
-                id: user._id,
-                name: user.name,
+            message: 'Registration successful! OTP sent to your email and WhatsApp.',
+            data: {
+                userId: user._id,
                 email: user.email,
-                role: user.role,
-                phone: user.phone,
+                mobile: user.mobile,
             },
         });
     } catch (error) {
@@ -152,12 +174,20 @@ const logout = async (req, res) => {
     });
 };
 
-// @desc    Register admin
+// @desc    Register admin (simplified with OTP)
 // @route   POST /api/auth/register-admin
 // @access  Public
 const registerAdmin = async (req, res) => {
     try {
-        const { firstName, lastName, email, password, mobile } = req.body;
+        const { name, email, mobile, password } = req.body;
+
+        // Validate required fields
+        if (!name || !email || !mobile || !password) {
+            return res.status(400).json({
+                success: false,
+                message: 'Please provide name, email, mobile, and password',
+            });
+        }
 
         // Check if user exists
         const userExists = await User.findOne({ email });
@@ -169,38 +199,44 @@ const registerAdmin = async (req, res) => {
             });
         }
 
-        // Create admin user
+        // Create admin user (not verified yet)
         const user = await User.create({
-            firstName,
-            lastName,
-            name: `${firstName} ${lastName}`,
+            name,
+            firstName: name.split(' ')[0],
+            lastName: name.split(' ').slice(1).join(' ') || '',
             email,
-            password,
             mobile,
+            phone: mobile,
+            password,
             role: 'admin',
-            registrationStep: 3,
-            isProfileComplete: true,
-            profileScore: 25, // Basic info only
-            profileCompleteness: {
-                basicInfo: true,
-                personalDetails: false,
-                kycVerified: false,
-                bankDetailsAdded: false,
-            },
+            isVerified: false,
+            profileCompleted: false,
         });
 
-        // Create token
-        const token = generateToken(user._id);
+        // Generate OTP
+        const otpCode = crypto.randomInt(100000, 999999).toString();
+        const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+        // Save OTP
+        await OTP.create({
+            userId: user._id,
+            email,
+            mobile,
+            otp: otpCode,
+            purpose: 'registration',
+            expiresAt,
+        });
+
+        // Send OTP
+        await sendOTPEmail(email, otpCode, name);
+        await sendOTPWhatsApp(mobile, otpCode, name);
 
         res.status(201).json({
             success: true,
-            token,
-            user: {
-                id: user._id,
-                firstName: user.firstName,
-                lastName: user.lastName,
+            message: 'Admin registration successful! OTP sent to your email and WhatsApp.',
+            data: {
+                userId: user._id,
                 email: user.email,
-                role: user.role,
                 mobile: user.mobile,
             },
         });

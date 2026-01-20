@@ -138,14 +138,32 @@ const verifyOTP = async (req, res) => {
         await otpRecord.save();
 
         // Update user as verified
-        await User.findByIdAndUpdate(userId, {
-            isVerified: true,
-            verifiedAt: new Date(),
-        });
+        const user = await User.findByIdAndUpdate(
+            userId,
+            {
+                isVerified: true,
+                verifiedAt: new Date(),
+            },
+            { new: true }
+        );
+
+        // Generate JWT token for automatic login
+        const generateToken = require('../utils/generateToken');
+        const token = generateToken(user._id);
 
         res.status(200).json({
             success: true,
             message: 'OTP verified successfully',
+            token,
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                mobile: user.mobile,
+                isVerified: user.isVerified,
+                profileCompleted: user.profileCompleted,
+            },
         });
     } catch (error) {
         console.error('Verify OTP error:', error);

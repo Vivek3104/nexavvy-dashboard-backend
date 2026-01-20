@@ -15,6 +15,9 @@ const leadRoutes = require('./routes/leads');
 const commissionRoutes = require('./routes/commission');
 const uploadRoutes = require('./routes/upload');
 const otpRoutes = require('./routes/otp');
+const paymentRoutes = require('./routes/payments');
+const usersRoutes = require('./routes/users');
+const notificationRoutes = require('./routes/notifications');
 
 // Initialize express app
 const app = express();
@@ -44,6 +47,9 @@ app.use('/api/leads', leadRoutes);
 app.use('/api/commission', commissionRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/otp', otpRoutes);
+app.use('/api/payments', paymentRoutes);
+app.use('/api/users', usersRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Health check route
 app.get('/api/health', (req, res) => {

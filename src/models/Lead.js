@@ -2,14 +2,17 @@ const mongoose = require('mongoose');
 
 const leadSchema = new mongoose.Schema(
     {
-        partnerId: {
+        // Submitted By (renamed from partnerId)
+        submittedBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User',
             required: true,
         },
-        name: {
+
+        // Client Information
+        clientName: {
             type: String,
-            required: [true, 'Please provide contact name'],
+            required: [true, 'Please provide client name'],
             trim: true,
         },
         mobile: {
@@ -42,38 +45,43 @@ const leadSchema = new mongoose.Schema(
             type: String,
             trim: true,
         },
-        productServices: {
+        servicesProducts: {
             type: String,
-            required: [true, 'Please provide product/services description'],
-        },
-        status: {
-            type: String,
-            enum: ['pending', 'contacted', 'converted', 'rejected'],
-            default: 'pending',
-        },
-        activeClient: {
-            type: Boolean,
-            default: false,
+            required: [true, 'Please provide services/products description'],
         },
 
-        // Approval Workflow
-        approvalStatus: {
+        // Lead Status (updated enum values)
+        status: {
             type: String,
-            enum: ['pending', 'approved', 'rejected'],
+            enum: ['pending', 'pipeline', 'joined', 'rejected'],
             default: 'pending',
         },
-        approvedAt: {
-            type: Date,
-        },
-        approvedBy: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'User',
+
+        // Additional Information
+        notes: {
+            type: String,
         },
         rejectionReason: {
             type: String,
         },
 
-        // Commission Tracking
+        // Status History
+        statusHistory: [
+            {
+                status: String,
+                changedBy: {
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: 'User',
+                },
+                changedAt: {
+                    type: Date,
+                    default: Date.now,
+                },
+                reason: String,
+            },
+        ],
+
+        // Commission Tracking (kept for backward compatibility)
         commissionEligible: {
             type: Boolean,
             default: false,
@@ -84,7 +92,7 @@ const leadSchema = new mongoose.Schema(
         },
         commissionAmount: {
             type: Number,
-            default: 750, // ₹750 per converted lead
+            default: 750,
         },
     },
     {
@@ -93,8 +101,8 @@ const leadSchema = new mongoose.Schema(
 );
 
 // Index for faster queries
-leadSchema.index({ partnerId: 1, status: 1 });
-leadSchema.index({ approvalStatus: 1 });
+leadSchema.index({ submittedBy: 1, status: 1 });
+leadSchema.index({ status: 1 });
 leadSchema.index({ createdAt: -1 });
 
 module.exports = mongoose.model('Lead', leadSchema);
