@@ -26,7 +26,10 @@ const app = express();
 connectDB();
 
 // Middleware
-app.use(helmet()); // Security headers
+app.use(helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+    contentSecurityPolicy: false,
+})); // Security headers
 app.use(cors({
     origin: config.frontendUrl,
     credentials: true,
@@ -35,8 +38,9 @@ app.use(express.json()); // Body parser
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev')); // HTTP request logger
 
-// Serve static files (uploads)
-app.use('/uploads', express.static('uploads'));
+// Serve static files (uploads) - serve the entire uploads directory
+const path = require('path');
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Routes
 app.use('/api/auth', authRoutes);

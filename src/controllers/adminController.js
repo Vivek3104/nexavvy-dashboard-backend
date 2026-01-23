@@ -328,6 +328,107 @@ const verifyKYC = async (req, res) => {
     }
 };
 
+// @desc    Get admin profile
+// @route   GET /api/admin/profile
+// @access  Private (Admin)
+const getAdminProfile = async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id).select('-password');
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found',
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            data: {
+                name: user.name,
+                email: user.email,
+                phone: user.phone || user.mobile,
+                address: user.address?.street || '',
+                city: user.address?.city || '',
+                state: user.address?.state || '',
+                pincode: user.address?.pincode || '',
+                profilePic: user.profilePic || null,
+            },
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+    }
+};
+
+// @desc    Update admin profile
+// @route   PUT /api/admin/profile
+// @access  Private (Admin)
+const updateAdminProfile = async (req, res) => {
+    try {
+        const { name, email, phone, address, city, state, pincode } = req.body;
+
+        const user = await User.findById(req.user._id);
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found',
+            });
+        }
+
+        // Update basic fields
+        if (name) user.name = name;
+        if (email) user.email = email;
+        if (phone) {
+            user.phone = phone;
+            user.mobile = phone;
+        }
+
+        // Update address
+        if (!user.address) {
+            user.address = {};
+        }
+        if (address) user.address.street = address;
+        if (city) user.address.city = city;
+        if (state) user.address.state = state;
+        if (pincode) user.address.pincode = pincode;
+
+        // Handle profile picture if uploaded
+        if (req.file) {
+            // req.file.path gives us the full path, we need to extract the relative path
+            // The file is saved in uploads/profiles/, so we construct the path
+            const relativePath = `/uploads/profiles/${req.file.filename}`;
+            user.profilePic = relativePath;
+            console.log('Profile picture saved:', relativePath);
+        }
+
+        await user.save();
+
+        res.status(200).json({
+            success: true,
+            data: {
+                name: user.name,
+                email: user.email,
+                phone: user.phone,
+                address: user.address?.street || '',
+                city: user.address?.city || '',
+                state: user.address?.state || '',
+                pincode: user.address?.pincode || '',
+                profilePic: user.profilePic,
+            },
+            message: 'Profile updated successfully',
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+    }
+};
+
 module.exports = {
     getAllLeads,
     getAdminStats,
@@ -337,4 +438,6 @@ module.exports = {
     approveLead,
     rejectLead,
     verifyKYC,
+    getAdminProfile,
+    updateAdminProfile,
 };

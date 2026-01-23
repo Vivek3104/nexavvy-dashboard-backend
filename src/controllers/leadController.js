@@ -7,6 +7,7 @@ const User = require('../models/User');
 const createLead = async (req, res) => {
     try {
         const {
+            name,
             clientName,
             businessName,
             mobile,
@@ -14,11 +15,16 @@ const createLead = async (req, res) => {
             city,
             businessType,
             website,
+            productServices,
             servicesProducts,
         } = req.body;
 
+        // Accept both old and new field names for backward compatibility
+        const finalClientName = name || clientName;
+        const finalProductServices = productServices || servicesProducts;
+
         // Validate required fields
-        if (!clientName || !businessName || !mobile || !email || !city || !businessType || !servicesProducts) {
+        if (!finalClientName || !businessName || !mobile || !email || !city || !businessType || !finalProductServices) {
             return res.status(400).json({
                 success: false,
                 message: 'Please provide all required fields',
@@ -27,14 +33,14 @@ const createLead = async (req, res) => {
 
         // Create lead
         const lead = await Lead.create({
-            clientName,
+            clientName: finalClientName,
             businessName,
             mobile,
             email,
             city,
             businessType,
             website,
-            servicesProducts,
+            servicesProducts: finalProductServices,
             submittedBy: req.user._id,
         });
 

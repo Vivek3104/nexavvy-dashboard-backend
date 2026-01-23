@@ -8,6 +8,8 @@ const {
     approveLead,
     rejectLead,
     verifyKYC,
+    getAdminProfile,
+    updateAdminProfile,
 } = require('../controllers/adminController');
 const {
     getAllCommissions,
@@ -17,12 +19,17 @@ const {
 } = require('../controllers/commissionController');
 const { protect } = require('../middleware/auth');
 const { authorize } = require('../middleware/roleCheck');
+const upload = require('../middleware/upload');
 
 const router = express.Router();
 
 // All routes are protected and require admin role
 router.use(protect);
 router.use(authorize('admin'));
+
+// Profile routes
+router.get('/profile', getAdminProfile);
+router.put('/profile', upload.single('profilePic'), updateAdminProfile);
 
 // Lead routes
 router.get('/leads', getAllLeads);
