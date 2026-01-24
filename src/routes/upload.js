@@ -1,5 +1,8 @@
 const express = require('express');
-const { uploadProfilePic, uploadKYCDocument } = require('../controllers/uploadController');
+const {
+  uploadProfilePic,
+  uploadKYCDocument,
+} = require('../controllers/uploadController');
 const { protect } = require('../middleware/auth');
 const upload = require('../middleware/upload');
 

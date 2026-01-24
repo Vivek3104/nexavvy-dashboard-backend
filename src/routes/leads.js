@@ -1,14 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const {
-    createLead,
-    getAllLeads,
-    getLeadsByStatus,
-    getLeadById,
-    updateLeadStatus,
-    getMyLeads,
-    deleteLead,
-    getLeadStats,
+  createLead,
+  getAllLeads,
+  getLeadsByStatus,
+  getLeadById,
+  updateLeadStatus,
+  getMyLeads,
+  deleteLead,
+  getLeadStats,
 } = require('../controllers/leadController');
 const { protect, isAdmin, isActive } = require('../middleware/auth');
 

@@ -1,8 +1,8 @@
 const express = require('express');
 const {
-    getMyLeads,
-    getMyStats,
-    createLead,
+  getMyLeads,
+  getMyStats,
+  createLead,
 } = require('../controllers/partnerController');
 const { protect } = require('../middleware/auth');
 const { authorize } = require('../middleware/roleCheck');

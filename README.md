@@ -33,6 +33,7 @@ Backend API for the Nexavvy Business Partner (NBP) Dashboard built with Node.js,
 ### Installation
 
 1. **Install dependencies:**
+
    ```bash
    npm install
    ```
@@ -43,11 +44,13 @@ Backend API for the Nexavvy Business Partner (NBP) Dashboard built with Node.js,
    - Change JWT_SECRET in production
 
 3. **Seed the database with demo data:**
+
    ```bash
    npm run seed
    ```
 
 4. **Start the development server:**
+
    ```bash
    npm run dev
    ```
@@ -57,6 +60,7 @@ Backend API for the Nexavvy Business Partner (NBP) Dashboard built with Node.js,
 ## API Endpoints
 
 ### Authentication
+
 ```
 POST   /api/auth/login       - Login with email/password
 POST   /api/auth/register    - Register new partner
@@ -64,17 +68,20 @@ POST   /api/auth/logout      - Logout (client-side)
 ```
 
 ### Partner Routes (Protected)
+
 ```
 GET    /api/partner/leads    - Get my submitted leads
 GET    /api/partner/stats    - Get my statistics
 ```
 
 ### Lead Routes (Protected)
+
 ```
 POST   /api/leads            - Submit new lead (Partner only)
 ```
 
 ### Admin Routes (Protected - Admin Only)
+
 ```
 GET    /api/admin/leads      - Get all leads with filters
 GET    /api/admin/stats      - Get system statistics
@@ -83,12 +90,14 @@ PATCH  /api/admin/leads/:id/status - Update lead status
 ```
 
 ### User Routes (Protected)
+
 ```
 GET    /api/user/profile     - Get current user profile
 PUT    /api/user/profile     - Update user profile
 ```
 
 ### Health Check
+
 ```
 GET    /api/health           - API health status
 ```
@@ -98,17 +107,21 @@ GET    /api/health           - API health status
 After running `npm run seed`, use these credentials:
 
 **Partner Account:**
+
 - Email: `partner@demo.com`
 - Password: `partner123`
 
 **Admin Account:**
+
 - Email: `admin@demo.com`
 - Password: `admin123`
 
 ## Request/Response Examples
 
 ### Login
+
 **Request:**
+
 ```json
 POST /api/auth/login
 {
@@ -118,6 +131,7 @@ POST /api/auth/login
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -133,7 +147,9 @@ POST /api/auth/login
 ```
 
 ### Create Lead
+
 **Request:**
+
 ```json
 POST /api/leads
 Authorization: Bearer <token>
@@ -150,6 +166,7 @@ Authorization: Bearer <token>
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -175,6 +192,7 @@ Authorization: Bearer <token>
 ## Database Schema
 
 ### Users Collection
+
 ```javascript
 {
   _id: ObjectId,
@@ -190,6 +208,7 @@ Authorization: Bearer <token>
 ```
 
 ### Leads Collection
+
 ```javascript
 {
   _id: ObjectId,

@@ -3,35 +3,35 @@ const config = require('../config/config');
 
 // Create transporter
 const transporter = nodemailer.createTransport({
-    host: config.smtpHost || 'smtp.gmail.com',
-    port: config.smtpPort || 587,
-    secure: false,
-    auth: {
-        user: config.smtpUser,
-        pass: config.smtpPass,
-    },
+  host: config.smtpHost || 'smtp.gmail.com',
+  port: config.smtpPort || 587,
+  secure: false,
+  auth: {
+    user: config.smtpUser,
+    pass: config.smtpPass,
+  },
 });
 
 /**
  * Send OTP via email
  */
 const sendOTPEmail = async (email, otp, name = 'User') => {
-    try {
-        // For development, just log the OTP
-        if (config.nodeEnv === 'development' || !config.smtpUser) {
-            console.log('\n📧 ========== EMAIL OTP ==========');
-            console.log(`To: ${email}`);
-            console.log(`Name: ${name}`);
-            console.log(`OTP: ${otp}`);
-            console.log('==================================\n');
-            return { success: true, message: 'OTP logged to console (dev mode)' };
-        }
+  try {
+    // For development, just log the OTP
+    if (config.nodeEnv === 'development' || !config.smtpUser) {
+      console.log('\n📧 ========== EMAIL OTP ==========');
+      console.log(`To: ${email}`);
+      console.log(`Name: ${name}`);
+      console.log(`OTP: ${otp}`);
+      console.log('==================================\n');
+      return { success: true, message: 'OTP logged to console (dev mode)' };
+    }
 
-        const mailOptions = {
-            from: `"Nexavvy NBP" <${config.smtpUser}>`,
-            to: email,
-            subject: 'Your Nexavvy OTP Code',
-            html: `
+    const mailOptions = {
+      from: `"Nexavvy NBP" <${config.smtpUser}>`,
+      to: email,
+      subject: 'Your Nexavvy OTP Code',
+      html: `
         <!DOCTYPE html>
         <html>
         <head>
@@ -67,17 +67,20 @@ const sendOTPEmail = async (email, otp, name = 'User') => {
         </body>
         </html>
       `,
-        };
+    };
 
-        await transporter.sendMail(mailOptions);
-        return { success: true, message: 'OTP sent to email' };
-    } catch (error) {
-        console.error('Email send error:', error);
-        console.log('\n📧 EMAIL OTP (fallback):', { email, otp, name });
-        return { success: false, message: 'Email service unavailable, OTP logged to console' };
-    }
+    await transporter.sendMail(mailOptions);
+    return { success: true, message: 'OTP sent to email' };
+  } catch (error) {
+    console.error('Email send error:', error);
+    console.log('\n📧 EMAIL OTP (fallback):', { email, otp, name });
+    return {
+      success: false,
+      message: 'Email service unavailable, OTP logged to console',
+    };
+  }
 };
 
 module.exports = {
-    sendOTPEmail,
+  sendOTPEmail,
 };

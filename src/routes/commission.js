@@ -1,7 +1,7 @@
 const express = require('express');
 const {
-    requestCommission,
-    getMyCommissions,
+  requestCommission,
+  getMyCommissions,
 } = require('../controllers/commissionController');
 const { protect } = require('../middleware/auth');
 const { authorize } = require('../middleware/roleCheck');

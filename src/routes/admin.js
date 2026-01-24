@@ -1,29 +1,39 @@
 const express = require('express');
 const {
-    getAllLeads,
-    getAdminStats,
-    updateLeadStatus,
-    getAllPartners,
-    getPendingLeads,
-    approveLead,
-    rejectLead,
-    verifyKYC,
-    getAdminProfile,
-    updateAdminProfile,
+  getAllLeads,
+  getAdminStats,
+  updateLeadStatus,
+  getAllPartners,
+  getPendingLeads,
+  approveLead,
+  rejectLead,
+  verifyKYC,
+  getAdminProfile,
+  updateAdminProfile,
 } = require('../controllers/adminController');
 const {
-    getAllCommissions,
-    approveCommission,
-    rejectCommission,
-    markAsPaid,
+  getAllCommissions,
+  approveCommission,
+  rejectCommission,
+  markAsPaid,
 } = require('../controllers/commissionController');
+const {
+  login,
+  registerAdmin,
+  logout,
+} = require('../controllers/authController');
 const { protect } = require('../middleware/auth');
 const { authorize } = require('../middleware/roleCheck');
 const upload = require('../middleware/upload');
 
 const router = express.Router();
 
-// All routes are protected and require admin role
+// Admin authentication routes (public)
+router.post('/login', login);
+router.post('/register', registerAdmin);
+router.post('/logout', protect, logout);
+
+// All other routes are protected and require admin role
 router.use(protect);
 router.use(authorize('admin'));
 

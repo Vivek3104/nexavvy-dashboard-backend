@@ -1,5 +1,9 @@
 const express = require('express');
-const { sendOTP, verifyOTP, resendOTP } = require('../controllers/otpController');
+const {
+  sendOTP,
+  verifyOTP,
+  resendOTP,
+} = require('../controllers/otpController');
 
 const router = express.Router();
 

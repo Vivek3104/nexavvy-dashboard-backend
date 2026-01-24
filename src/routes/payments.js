@@ -1,12 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const {
-    createPaymentRequest,
-    getAllPaymentRequests,
-    getPendingRequests,
-    getMyPaymentRequests,
-    approvePayment,
-    rejectPayment,
+  createPaymentRequest,
+  getAllPaymentRequests,
+  getPendingRequests,
+  getMyPaymentRequests,
+  approvePayment,
+  rejectPayment,
 } = require('../controllers/paymentController');
 const { protect, isAdmin, isActive } = require('../middleware/auth');
 

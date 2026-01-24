@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const {
-    createNotification,
-    getAdminNotifications,
-    markAsRead,
-    contactAdmin,
+  createNotification,
+  getAdminNotifications,
+  markAsRead,
+  contactAdmin,
 } = require('../controllers/notificationController');
 const { protect, isAdmin } = require('../middleware/auth');
 
